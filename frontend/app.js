@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5555/api/v1';
+const API_BASE_URL = 'https://careguide-task.vercel.app/api/v1';
 
 // Global Session State
 let token = localStorage.getItem('token') || '';
@@ -64,7 +64,7 @@ function showLoader(show) {
 async function apiRequest(endpoint, options = {}) {
   showLoader(true);
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   const headers = {
     'Content-Type': 'application/json',
     ...(token && { 'Authorization': `Bearer ${token}` }),
@@ -79,11 +79,11 @@ async function apiRequest(endpoint, options = {}) {
   try {
     const response = await fetch(url, config);
     const result = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(result.message || 'Something went wrong');
     }
-    
+
     return result;
   } catch (error) {
     showToast(error.message, 'error');
@@ -102,11 +102,11 @@ function showAuth() {
 function showDashboard() {
   document.getElementById('auth-view').classList.add('hidden');
   document.getElementById('dashboard-view').classList.remove('hidden');
-  
+
   // Set user profile display
   const userDisplay = document.getElementById('user-display');
   userDisplay.innerHTML = `${currentUser.email} <span class="author-tag">${currentUser.role}</span>`;
-  
+
   // Conditionally show/hide Admin Sidebar navigation links
   const adminLinks = document.querySelectorAll('.admin-only');
   if (currentUser.role === 'ADMIN') {
@@ -143,7 +143,7 @@ function switchAuthTab(type) {
 
 function switchTab(tabId) {
   currentTab = tabId;
-  
+
   // Update sidebar active status
   const navButtons = document.querySelectorAll('.nav-btn');
   navButtons.forEach(btn => {
@@ -191,10 +191,10 @@ async function handleLogin(event) {
     token = result.data.accessToken;
     localStorage.setItem('token', token);
     currentUser = parseJwt(token);
-    
+
     showToast('Logged in successfully!');
     showDashboard();
-    
+
     // Clear form inputs
     document.getElementById('login-form').reset();
   } catch (err) {
@@ -242,7 +242,7 @@ async function loadNotes(page = 1) {
     const result = await apiRequest(`/notes?page=${page}&limit=6`);
     const notes = result.data || [];
     const meta = result.meta || { page: 1, limit: 6, total: 0 };
-    
+
     const notesGrid = document.getElementById('notes-grid');
     notesGrid.innerHTML = '';
 
@@ -255,9 +255,9 @@ async function loadNotes(page = 1) {
     notes.forEach(note => {
       const card = document.createElement('div');
       card.className = 'card note-card';
-      
+
       const isOwner = note.userId && (note.userId._id === currentUser.id || note.userId === currentUser.id);
-      
+
       let noteFooter = '';
       // Only show Edit/Delete buttons if user is the note owner
       if (isOwner) {
@@ -343,7 +343,7 @@ async function loadPosts(page = 1) {
     const result = await apiRequest(`/posts?page=${page}&limit=6`);
     const posts = result.data || [];
     const meta = result.meta || { page: 1, limit: 6, total: 0 };
-    
+
     const postsGrid = document.getElementById('posts-grid');
     postsGrid.innerHTML = '';
 
@@ -358,7 +358,7 @@ async function loadPosts(page = 1) {
     posts.forEach(post => {
       const card = document.createElement('div');
       card.className = 'card post-card';
-      
+
       const authorText = post.userId && post.userId.email ? post.userId.email : 'Unknown';
 
       card.innerHTML = `
@@ -381,7 +381,7 @@ async function loadPosts(page = 1) {
 function populateContributorDropdown(posts) {
   console.log("populating dropdown with posts:", posts);
   console.log("currentUser logged in:", currentUser);
-  
+
   const select = document.getElementById('search-user-id');
   if (!select) return;
 
@@ -480,7 +480,7 @@ async function handleUserPostsLookup() {
   const userId = document.getElementById('search-user-id').value;
   const resultsDiv = document.getElementById('lookup-results');
   if (!resultsDiv) return;
-  
+
   if (!userId) {
     resultsDiv.innerHTML = '<p class="no-results">Select a contributor from the list above to view their activity stream.</p>';
     return;
@@ -489,7 +489,7 @@ async function handleUserPostsLookup() {
   try {
     const result = await apiRequest(`/users/${userId}/posts`);
     const userData = result.data;
-    
+
     if (!userData) {
       resultsDiv.innerHTML = '<p class="no-results">Contributor profile not found.</p>';
       return;
@@ -543,7 +543,7 @@ async function loadGroupedInterests() {
   try {
     const result = await apiRequest('/users/by-interests');
     const grouped = result.data || [];
-    
+
     const interestsList = document.getElementById('interests-list');
     interestsList.innerHTML = '';
 
@@ -555,7 +555,7 @@ async function loadGroupedInterests() {
     grouped.forEach(group => {
       const card = document.createElement('div');
       card.className = 'card interest-group';
-      
+
       const usersHtml = group.users.map(u => `
         <div class="interest-user-badge">
           <span>${escapeHtml(u.email)}</span>
@@ -583,13 +583,13 @@ async function loadUsers(page = 1) {
     const result = await apiRequest(`/users?page=${page}&limit=8`);
     const users = result.data || [];
     const meta = result.meta || { page: 1, limit: 8, total: 0 };
-    
+
     const tableBody = document.getElementById('users-table-body');
     tableBody.innerHTML = '';
 
     users.forEach(user => {
       const tr = document.createElement('tr');
-      
+
       const interestsHtml = user.interests
         .map(i => `<span class="interest-pill">${escapeHtml(i)}</span>`)
         .join('');
@@ -688,7 +688,7 @@ async function handleDeleteUser(id) {
 function renderPagination(containerId, meta, loadFunction) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
-  
+
   const totalPages = Math.ceil(meta.total / meta.limit);
   if (totalPages <= 1) return;
 
