@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Note-Taking & Aggregation Hub</title>
+  <!-- Google Fonts: Outfit -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loading" class="loading-overlay hidden">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- 1. AUTHENTICATION VIEW -->
+  <div id="auth-view" class="view container">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button id="tab-login-btn" class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+        <button id="tab-register-btn" class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+        <h2>Welcome Back</h2>
+        <p class="subtitle">Log in to manage your notes securely</p>
+        <div class="form-group">
+          <label for="login-email">Email Address</label>
+          <input type="email" id="login-email" required placeholder="name@example.com">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary">Sign In</button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+        <h2>Create Account</h2>
+        <p class="subtitle">Join our secure note-taking platform</p>
+        <div class="form-group">
+          <label for="reg-email">Email Address</label>
+          <input type="email" id="reg-email" required placeholder="name@example.com">
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Password</label>
+          <input type="password" id="reg-password" required placeholder="At least 6 characters">
+        </div>
+        <div class="form-group">
+          <label for="reg-role">Account Role</label>
+          <select id="reg-role">
+            <option value="USER">User (Standard)</option>
+            <option value="ADMIN">Admin (Manager)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="reg-interests">Interests (Comma-separated)</label>
+          <input type="text" id="reg-interests" placeholder="chess, reading, sports">
+        </div>
+        <button type="submit" class="btn btn-primary">Sign Up</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. DASHBOARD VIEW -->
+  <div id="dashboard-view" class="view hidden">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-logo">
+        <span class="logo-accent">Secure</span>Notes
+      </div>
+      <div class="user-meta">
+        <span id="user-display" class="user-badge"></span>
+        <button onclick="handleLogout()" class="btn btn-secondary btn-sm">Logout</button>
+      </div>
+    </header>
+
+    <!-- App Layout -->
+    <div class="app-layout container">
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <nav class="nav-links">
+          <button id="nav-notes" class="nav-btn active" onclick="switchTab('notes')">
+            <span class="nav-icon">📝</span> Notes
+          </button>
+          <button id="nav-posts" class="nav-btn" onclick="switchTab('posts')">
+            <span class="nav-icon">📢</span> Public Posts
+          </button>
+          <button id="nav-interests" class="nav-btn" onclick="switchTab('interests')">
+            <span class="nav-icon">🧩</span> Interest Directory
+          </button>
+          <button id="nav-admin" class="nav-btn admin-only hidden" onclick="switchTab('admin')">
+            <span class="nav-icon">⚙️</span> Admin Panel
+          </button>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        
+        <!-- Tab 1: Notes -->
+        <section id="tab-notes" class="tab-content">
+          <div class="section-header">
+            <h2>Your Notes</h2>
+            <button class="btn btn-primary btn-sm" onclick="openNoteModal('create')">+ New Note</button>
+          </div>
+
+          <!-- Notes Grid -->
+          <div id="notes-grid" class="notes-grid">
+            <!-- Dynamically populated -->
+          </div>
+
+          <!-- Notes Pagination -->
+          <div class="pagination" id="notes-pagination">
+            <!-- Dynamically populated -->
+          </div>
+        </section>
+
+        <!-- Tab 2: Public Posts -->
+        <section id="tab-posts" class="tab-content hidden">
+          <div class="section-header">
+            <h2>Public Posts</h2>
+            <button class="btn btn-primary btn-sm" onclick="openPostModal()">+ Create Public Post</button>
+          </div>
+
+          <!-- Contributor Feed Filter -->
+          <div class="search-box card">
+            <h3>Filter Feed by Contributor</h3>
+            <p class="card-desc">Select a specific contributor to review their complete publication stream and activity history.</p>
+            <div class="search-form">
+              <select id="search-user-id" style="width: 100%;" onchange="handleUserPostsLookup()">
+                <option value="">-- Select a Contributor --</option>
+              </select>
+            </div>
+            <div id="lookup-results" class="lookup-results">
+              <p class="no-results">Select a contributor from the list above to view their activity stream.</p>
+            </div>
+          </div>
+
+          <!-- All Posts Grid -->
+          <h3 class="section-subheader">All Public Posts</h3>
+          <div id="posts-grid" class="posts-grid">
+            <!-- Dynamically populated -->
+          </div>
+          
+          <!-- Posts Pagination -->
+          <div class="pagination" id="posts-pagination">
+            <!-- Dynamically populated -->
+          </div>
+        </section>
+
+        <!-- Tab 3: Grouped Interests (Scenario 1) -->
+        <section id="tab-interests" class="tab-content hidden">
+          <div class="section-header">
+            <h2>Community Interest Directory</h2>
+            <button onclick="loadGroupedInterests()" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+          </div>
+          <p class="section-desc">Discover and network with other team members clustered by shared professional expertise, active research domains, or hobbies.</p>
+
+          <div id="interests-list" class="interests-list">
+            <!-- Aggregation cards -->
+          </div>
+        </section>
+
+        <!-- Tab 4: Admin Panel -->
+        <section id="tab-admin" class="tab-content hidden">
+          <div class="section-header">
+            <h2>User Management</h2>
+            <button class="btn btn-primary btn-sm" onclick="openUserModal('create')">+ Add User</button>
+          </div>
+
+          <!-- Users List -->
+          <div class="card overflow-x">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Interests</th>
+                  <th>Created At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Users Pagination -->
+          <div class="pagination" id="users-pagination">
+            <!-- Dynamically populated -->
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Note Create/Edit Modal -->
+  <div id="note-modal" class="modal hidden">
+    <div class="modal-content card">
+      <span class="modal-close" onclick="closeNoteModal()">&times;</span>
+      <h2 id="note-modal-title">Create Note</h2>
+      <form id="note-form" onsubmit="handleSaveNote(event)">
+        <input type="hidden" id="note-modal-id">
+        <div class="form-group">
+          <label for="note-title">Title</label>
+          <input type="text" id="note-title" required placeholder="Note title...">
+        </div>
+        <div class="form-group">
+          <label for="note-text">Content</label>
+          <textarea id="note-text" required placeholder="Write your note content here..." rows="6"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeNoteModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Note</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Post Create Modal -->
+  <div id="post-modal" class="modal hidden">
+    <div class="modal-content card">
+      <span class="modal-close" onclick="closePostModal()">&times;</span>
+      <h2>Create Public Post</h2>
+      <form id="post-form" onsubmit="handleSavePost(event)">
+        <div class="form-group">
+          <label for="post-title">Post Title</label>
+          <input type="text" id="post-title" required placeholder="What's on your mind?">
+        </div>
+        <div class="form-group">
+          <label for="post-text">Post Content</label>
+          <textarea id="post-text" required placeholder="Write post body here..." rows="5"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closePostModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Publish Post</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- User Create/Edit Modal -->
+  <div id="user-modal" class="modal hidden">
+    <div class="modal-content card">
+      <span class="modal-close" onclick="closeUserModal()">&times;</span>
+      <h2 id="user-modal-title">Add User</h2>
+      <form id="user-form" onsubmit="handleSaveUser(event)">
+        <input type="hidden" id="user-modal-id">
+        <div class="form-group">
+          <label for="user-email">Email Address</label>
+          <input type="email" id="user-email" required placeholder="name@example.com">
+        </div>
+        <div class="form-group" id="user-password-group">
+          <label for="user-password">Password</label>
+          <input type="password" id="user-password" placeholder="At least 6 characters">
+        </div>
+        <div class="form-group">
+          <label for="user-role">Account Role</label>
+          <select id="user-role">
+            <option value="USER">User (Standard)</option>
+            <option value="ADMIN">Admin (Manager)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="user-interests">Interests (Comma-separated)</label>
+          <input type="text" id="user-interests" placeholder="chess, reading, running">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js?v=2"></script>
+</body>
+</html>
