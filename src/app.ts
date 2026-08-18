@@ -10,7 +10,15 @@ import morgan from "morgan";
 const app: Application = express();
 
 export const corsOptions = {
-  origin: true, // Allow all origins dynamically or we can set "*"
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (!origin) return callback(null, true);
+    // Allow any localhost origin (any port) and your production frontend domain
+    if (/^http:\/\/localhost(:\d+)?$/.test(origin) || origin === "https://careguide-task.vercel.app") {
+      callback(null, true);
+    } else {
+      callback(null, false); // Don't throw error to avoid crashing, just deny CORS
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
