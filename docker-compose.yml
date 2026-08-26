@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: careguide-backend
+    restart: unless-stopped
+    ports:
+      - "6565:5000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=5000
+      - DATABASE_URL=${DATABASE_URL}
+      - BCRYPT_SALT_ROUNDS=${BCRYPT_SALT_ROUNDS:-12}
+      - JWT_SECRET=${JWT_SECRET}
+      - EXPIRES_IN=${EXPIRES_IN:-60d}
+    env_file:
+      - .env
